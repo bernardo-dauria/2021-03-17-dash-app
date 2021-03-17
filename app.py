@@ -92,11 +92,8 @@ app.layout = html.Div([
             value=[min_bodywt, max_bodywt]
         ),
         dcc.Tabs(id="tabs", value='tab-t', children=[
-
             dcc.Tab(label='Table', value='tab-t'),
-
             dcc.Tab(label='Graph', value='tab-g'),
-
         ]),
 
         html.Div(id="tabs-content")
@@ -112,16 +109,22 @@ app.layout = html.Div([
 @app.callback(
      Output('my-table', 'data'),
      Input('range', 'value'),
-     Input('my-dropdown', 'value'))
-def update_data(range, values):
+     Input('my-dropdown', 'value'),
+     State('tabs','value'))
+def update_data(range, values, tab):
+    if tab != 'tab-t':
+        return None
     filter = df['vore'].isin(values) & df['bodywt'].between(range[0], range[1])
     return df[filter].to_dict("records")
 
 @app.callback(
      Output('my_graph', 'figure'),
      Input('range', 'value'),
-     Input('my-dropdown', 'value'))
-def update_figure(range, values):
+     Input('my-dropdown', 'value'),
+     State('tabs','value'))
+def update_figure(range, values, tab):
+    if tab != 'tab-g':
+        return None
     filter = df['vore'].isin(values) & df['bodywt'].between(range[0], range[1])
     return px.scatter(df[filter], x="bodywt", y="sleep_total", color="vore", color_discrete_map= col_vore)
 
