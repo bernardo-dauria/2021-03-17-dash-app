@@ -42,7 +42,9 @@ graph_tab = html.Div([
             color="vore",
             color_discrete_map= col_vore)
     ),
-    html.Div(id="selected_data")
+    dt.DataTable(id="selected_data",
+        columns = df_cols
+    )
 ])
 
 app.layout = html.Div([
@@ -96,13 +98,14 @@ def update_figure(data, tab):
     return px.scatter(dff, x="bodywt", y="sleep_total", custom_data=["name"], color="vore", color_discrete_map= col_vore)
 
 @app.callback(
-    Output('selected_data', 'children'),
+    Output('selected_data', 'data'),
     Input('my_graph', 'selectedData'))
 def display_selected_data(selectedData):
     if selectedData is None:
         return None
     names = [o["customdata"][0] for o in selectedData["points"]]
-    return json.dumps(names)
+    filter = df['name'].isin(names)
+    return df[filter].to_dict("records")
 
 @app.callback(
      Output('data', 'children'),
