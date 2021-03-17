@@ -29,7 +29,9 @@ opt_vore = [{'label': x + 'vore', 'value': x} for x in df_vore]
 
 col_vore = {x:px.colors.qualitative.Pastel[i] for i, x in enumerate(df_vore)}
 
-
+min_bodywt = min(df["bodywt"].dropna()) 
+max_bodywt = max(df["bodywt"].dropna()) 
+step_bodywt = (max_bodywt - min_bodywt)/10
 
 print(col_vore)
 
@@ -42,37 +44,24 @@ app = dash.Dash(__name__, title="Dash App")
 
 
 markdown_text = '''
-
 ## Some references
 
 - [Dash HTML Components](dash.plotly.com/dash-html-components)
-
 - [Dash Core Components](dash.plotly.com/dash-core-components)  
-
 - [Dash Bootstrap Components](dash-bootstrap-components.opensource.faculty.ai/docs/components)  
-
 '''
 
 table_tab = dt.DataTable(id="my-table",
-
                 columns = df_cols,
-
                 data= df.to_dict("records")
-
             )
 
 graph_tab = dcc.Graph(id="my_graph",
-
                 figure= px.scatter(df,
-
                     x="bodywt",
-
                     y="sleep_total",
-
                     color="vore",
-
                     color_discrete_map= col_vore)
-
             )
 
 
@@ -94,11 +83,13 @@ app.layout = html.Div([
                 multi= True
             )
         ]),
-        dcc.Slider(
-            min=-5,
-            max=10,
-            step=0.5,
-            value=-3
+        html.Div(id="log"),
+        dcc.RangeSlider(id="range",
+            min=min_bodywt,
+            max=max_bodywt,
+            step=step_bodywt,
+            marks={min_bodywt + i * step_bodywt: '{}'.format(round(min_bodywt + i * step_bodywt,2)) for i in range(10)},
+            value=[min_bodywt, max_bodywt]
         ),
         dcc.Tabs(id="tabs", value='tab-t', children=[
 
@@ -119,48 +110,34 @@ app.layout = html.Div([
 
 
 @app.callback(
-
      Output('my-table', 'data'),
-
+     Input('range', 'value'),
      Input('my-dropdown', 'value'))
-
-def update_data(values):
-
-    filter = df['vore'].isin(values)
-
+def update_data(range, values):
+    filter = df['vore'].isin(values) & df['bodywt'].between(range[0], range[1])
     return df[filter].to_dict("records")
 
-
-
 @app.callback(
-
      Output('my_graph', 'figure'),
-
+     Input('range', 'value'),
      Input('my-dropdown', 'value'))
-
-def update_figure(values):
-
-    filter = df['vore'].isin(values)
-
+def update_figure(range, values):
+    filter = df['vore'].isin(values) & df['bodywt'].between(range[0], range[1])
     return px.scatter(df[filter], x="bodywt", y="sleep_total", color="vore", color_discrete_map= col_vore)
 
-
+@app.callback(
+     Output('log', 'children'),
+     Input('range', 'value'))
+def update_div(v):
+    return '{}'.format(v)
 
 @app.callback(
-
      Output('tabs-content', 'children'),
-
      Input('tabs', 'value'))
-
 def update_tabs(v):
-
     if v == 'tab-g':
-
         return graph_tab
-
     return table_tab
-
-
 
 if __name__ == '__main__':
     # app.server.run(debug=True)
