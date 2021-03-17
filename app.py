@@ -29,10 +29,18 @@ markdown_text = '''
 - [Dash Bootstrap Components](dash-bootstrap-components.opensource.faculty.ai/docs/components)  
 '''
 
-table_tab = dt.DataTable(id="my-table",
-                columns = df_cols,
-                data= df.to_dict("records")
-            )
+table_tab = html.Div([
+    dt.DataTable(id="my_table",
+        columns = df_cols,
+        data= df.to_dict("records")
+    ),
+    dcc.Graph(id="my_boxplot",
+        figure= px.box(df,
+            y="bodywt",
+            color="vore",
+            color_discrete_map= col_vore)
+    )
+])
 
 graph_tab = html.Div([
     dcc.Graph(id="my_graph",
@@ -78,7 +86,7 @@ app.layout = html.Div([
 
 
 @app.callback(
-     Output('my-table', 'data'),
+     Output('my_table', 'data'),
      Input('data', 'children'),
      State('tabs','value'))
 def update_table(data, tab):
@@ -86,6 +94,17 @@ def update_table(data, tab):
         return None
     dff = pd.read_json(data)
     return dff.to_dict("records")
+
+@app.callback(
+     Output('my_boxplot', 'figure'),
+     Input('data', 'children'),
+     State('tabs','value'))
+def update_boxplot(data, tab):
+    if tab != 'tab-t':
+        return None
+    dff = pd.read_json(data)
+    return px.box(dff, y="sleep_total", custom_data=["name"], color="vore", color_discrete_map= col_vore)
+
 
 @app.callback(
      Output('my_graph', 'figure'),
