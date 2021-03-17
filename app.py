@@ -87,24 +87,14 @@ app.layout = html.Div([
 
 @app.callback(
      Output('my_table', 'data'),
+     Output('my_boxplot', 'figure'),
      Input('data', 'children'),
      State('tabs','value'))
 def update_table(data, tab):
     if tab != 'tab-t':
         return None
     dff = pd.read_json(data)
-    return dff.to_dict("records")
-
-@app.callback(
-     Output('my_boxplot', 'figure'),
-     Input('data', 'children'),
-     State('tabs','value'))
-def update_boxplot(data, tab):
-    if tab != 'tab-t':
-        return None
-    dff = pd.read_json(data)
-    return px.box(dff, y="sleep_total", custom_data=["name"], color="vore", color_discrete_map= col_vore)
-
+    return dff.to_dict("records"), px.box(dff, y="sleep_total", custom_data=["name"], color="vore", color_discrete_map= col_vore)
 
 @app.callback(
      Output('my_graph', 'figure'),
