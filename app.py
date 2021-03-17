@@ -34,13 +34,16 @@ table_tab = dt.DataTable(id="my-table",
                 data= df.to_dict("records")
             )
 
-graph_tab = dcc.Graph(id="my_graph",
-                figure= px.scatter(df,
-                    x="bodywt",
-                    y="sleep_total",
-                    color="vore",
-                    color_discrete_map= col_vore)
-            )
+graph_tab = html.Div([
+    dcc.Graph(id="my_graph",
+        figure= px.scatter(df,
+            x="bodywt",
+            y="sleep_total",
+            color="vore",
+            color_discrete_map= col_vore)
+    ),
+    html.Div(id="selected_data")
+])
 
 app.layout = html.Div([
     html.Div([
@@ -90,7 +93,16 @@ def update_figure(data, tab):
     if tab != 'tab-g':
         return None
     dff = pd.read_json(data)
-    return px.scatter(dff, x="bodywt", y="sleep_total", color="vore", color_discrete_map= col_vore)
+    return px.scatter(dff, x="bodywt", y="sleep_total", custom_data=["name"], color="vore", color_discrete_map= col_vore)
+
+@app.callback(
+    Output('selected_data', 'children'),
+    Input('my_graph', 'selectedData'))
+def display_selected_data(selectedData):
+    if selectedData is None:
+        return None
+    names = [o["customdata"][0] for o in selectedData["points"]]
+    return json.dumps(names)
 
 @app.callback(
      Output('data', 'children'),
